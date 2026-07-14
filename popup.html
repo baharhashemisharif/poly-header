@@ -1,0 +1,24 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <h1>PolyHeader</h1>
+    <div class="actions">
+      <button id="pause" title="Pause/resume all rules"></button>
+      <button id="add" title="Add rule">+ Add</button>
+    </div>
+  </header>
+
+  <div id="rules"></div>
+
+  <footer>
+    Empty value removes the header · URL filter: substring, <code>*</code> wildcard, or <code>||domain.com</code>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

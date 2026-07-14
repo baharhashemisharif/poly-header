@@ -1,0 +1,149 @@
+:root {
+  --bg: #ffffff;
+  --fg: #1f2937;
+  --muted: #6b7280;
+  --border: #d1d5db;
+  --input-bg: #f9fafb;
+  --accent: #2563eb;
+  --danger: #dc2626;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1e1e20;
+    --fg: #e5e7eb;
+    --muted: #9ca3af;
+    --border: #3f3f46;
+    --input-bg: #27272a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  width: 640px;
+  margin: 0;
+  padding: 10px 12px;
+  font: 13px/1.4 -apple-system, system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--fg);
+}
+
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+h1 {
+  font-size: 14px;
+  margin: 0;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+}
+
+#add {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+#add:hover { filter: brightness(1.1); }
+
+#pause {
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--fg);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
+#pause:hover { border-color: var(--muted); }
+#pause.paused {
+  border-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+
+body.all-paused #rules { opacity: 0.45; }
+
+.rule {
+  display: grid;
+  grid-template-columns: auto 1fr 1.2fr 1fr auto auto;
+  gap: 6px;
+  align-items: center;
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+}
+.rule:last-child { border-bottom: none; }
+
+.rule input[type="text"] {
+  width: 100%;
+  padding: 5px 7px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--input-bg);
+  color: var(--fg);
+  font-size: 12px;
+}
+.rule input[type="text"]:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+
+.rule input[type="checkbox"] {
+  accent-color: var(--accent);
+  width: 15px;
+  height: 15px;
+  cursor: pointer;
+}
+
+.rule.disabled input[type="text"],
+.rule.disabled select { opacity: 0.45; }
+
+.rule select {
+  max-width: 130px;
+  padding: 4px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--input-bg);
+  color: var(--fg);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.rule .del {
+  border: none;
+  background: none;
+  color: var(--muted);
+  font-size: 15px;
+  cursor: pointer;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+.rule .del:hover { color: var(--danger); }
+
+#empty {
+  color: var(--muted);
+  text-align: center;
+  margin: 18px 0;
+}
+
+footer {
+  margin-top: 8px;
+  color: var(--muted);
+  font-size: 11px;
+}
+footer code {
+  background: var(--input-bg);
+  padding: 0 3px;
+  border-radius: 3px;
+}
