@@ -34,9 +34,19 @@ async function init() {
 
 function save(immediate = false) {
   clearTimeout(saveTimer);
-  const write = () => chrome.storage.local.set({ rules, nextId, paused });
+  saveTimer = null;
+  const write = () => {
+    saveTimer = null;
+    chrome.storage.local.set({ rules, nextId, paused });
+  };
   if (immediate) write();
   else saveTimer = setTimeout(write, 250);
+}
+
+// The popup is torn down as soon as it loses focus, which kills a pending
+// debounced save — flush it so the last keystrokes aren't dropped.
+function flushSave() {
+  if (saveTimer) save(true);
 }
 
 function render() {
@@ -123,6 +133,11 @@ document.getElementById('add').addEventListener('click', () => {
   render();
   save(true);
   $rules.lastChild.querySelector('input[type="text"]').focus();
+});
+
+window.addEventListener('pagehide', flushSave);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'hidden') flushSave();
 });
 
 $pause.addEventListener('click', () => {
