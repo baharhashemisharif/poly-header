@@ -43,6 +43,7 @@ function render() {
   $rules.textContent = '';
   for (const rule of rules) $rules.appendChild(renderRule(rule));
   $pause.textContent = paused ? '▶ Resume' : '⏸ Pause all';
+  $pause.setAttribute('aria-pressed', String(paused));
   $pause.classList.toggle('paused', paused);
   document.body.classList.toggle('all-paused', paused);
 }
@@ -50,23 +51,26 @@ function render() {
 function renderRule(rule) {
   const row = document.createElement('div');
   row.className = 'rule' + (rule.enabled ? '' : ' disabled');
+  row.setAttribute('role', 'listitem');
 
   const toggle = document.createElement('input');
   toggle.type = 'checkbox';
   toggle.checked = rule.enabled;
   toggle.title = 'Enable rule';
+  toggle.setAttribute('aria-label', 'Enable rule');
   toggle.addEventListener('change', () => {
     rule.enabled = toggle.checked;
     row.classList.toggle('disabled', !rule.enabled);
     save(true);
   });
 
-  const header = textInput(rule, 'header', 'Header name');
-  const value = textInput(rule, 'value', 'Value (empty = remove)');
-  const urlFilter = textInput(rule, 'urlFilter', 'URL filter (all if empty)');
+  const header = textInput(rule, 'header', 'Header name', 'Header name');
+  const value = textInput(rule, 'value', 'Value (empty = remove)', 'Header value');
+  const urlFilter = textInput(rule, 'urlFilter', 'URL filter (all if empty)', 'URL filter');
 
   const tabSel = document.createElement('select');
   tabSel.title = 'Tab filter';
+  tabSel.setAttribute('aria-label', 'Tab filter');
   tabSel.append(new Option('All tabs', 'all'));
   tabSel.append(new Option('This tab', 'current'));
   if (rule.tabId && rule.tabId !== currentTab?.id) {
@@ -93,6 +97,7 @@ function renderRule(rule) {
   del.className = 'del';
   del.textContent = '✕';
   del.title = 'Delete rule';
+  del.setAttribute('aria-label', 'Delete rule');
   del.addEventListener('click', () => {
     rules = rules.filter((r) => r.id !== rule.id);
     if (rules.length === 0) rules.push(blankRule());
@@ -104,10 +109,12 @@ function renderRule(rule) {
   return row;
 }
 
-function textInput(rule, key, placeholder) {
+// Placeholders vanish once a field has text, so give each input a label too.
+function textInput(rule, key, placeholder, label) {
   const input = document.createElement('input');
   input.type = 'text';
   input.placeholder = placeholder;
+  input.setAttribute('aria-label', label);
   input.value = rule[key] || '';
   input.autocomplete = 'off';
   input.spellcheck = false;
