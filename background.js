@@ -67,36 +67,33 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (area === 'local' && (changes.rules || changes.paused)) rebuild();
 });
 
+// Disable tab-scoped rules matching `shouldDrop`, in the active profile and in
+// the parked ones (so switching back to a profile can't revive a dead tab id).
+// Returns whether anything changed.
+async function disableTabRules(shouldDrop) {
+  const { rules = [], profiles = {} } = await chrome.storage.local.get(['rules', 'profiles']);
+  let changed = false;
+  for (const list of [rules, ...Object.values(profiles)]) {
+    for (const r of list) {
+      if (r.tabId && shouldDrop(r.tabId)) {
+        r.tabId = null;
+        r.tabTitle = null;
+        r.enabled = false;
+        changed = true;
+      }
+    }
+  }
+  if (changed) await chrome.storage.local.set({ rules, profiles });
+  return changed;
+}
+
 // Tab ids are meaningless after a restart — disable tab-scoped rules rather
 // than let them silently match whatever new tab reuses the id.
 chrome.runtime.onStartup.addListener(async () => {
-  const { rules = [] } = await chrome.storage.local.get('rules');
-  let changed = false;
-  for (const r of rules) {
-    if (r.tabId) {
-      r.tabId = null;
-      r.tabTitle = null;
-      r.enabled = false;
-      changed = true;
-    }
-  }
-  if (changed) await chrome.storage.local.set({ rules });
-  else rebuild();
+  if (!(await disableTabRules(() => true))) rebuild();
 });
 
 chrome.runtime.onInstalled.addListener(rebuild);
 
 // When a pinned tab closes, disable its rules instead of widening them to all tabs.
-chrome.tabs.onRemoved.addListener(async (tabId) => {
-  const { rules = [] } = await chrome.storage.local.get('rules');
-  let changed = false;
-  for (const r of rules) {
-    if (r.tabId === tabId) {
-      r.tabId = null;
-      r.tabTitle = null;
-      r.enabled = false;
-      changed = true;
-    }
-  }
-  if (changed) await chrome.storage.local.set({ rules });
-});
+chrome.tabs.onRemoved.addListener((tabId) => disableTabRules((id) => id === tabId));

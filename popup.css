@@ -41,6 +41,36 @@ h1 {
   margin: 0;
 }
 
+.profiles {
+  display: flex;
+  gap: 6px;
+  flex: 1;
+  margin: 0 10px;
+}
+#profile, #profile-name {
+  max-width: 180px;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--input-bg);
+  color: var(--fg);
+  font-size: 12px;
+}
+#profile-name.invalid { border-color: var(--danger); }
+#profile-delete {
+  border: 1px solid var(--border);
+  background: none;
+  color: var(--muted);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-size: 12px;
+  cursor: pointer;
+}
+#profile-delete:hover, #profile-delete.armed {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
 .actions {
   display: flex;
   gap: 6px;
