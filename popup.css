@@ -120,6 +120,13 @@ body.all-paused #rules { opacity: 0.45; }
   cursor: pointer;
 }
 
+.rule.rejected input[type="text"] { border-color: var(--danger); }
+.rule-error {
+  grid-column: 1 / -1;
+  color: var(--danger);
+  font-size: 11px;
+}
+
 .rule .del {
   border: none;
   background: none;

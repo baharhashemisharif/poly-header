@@ -19,4 +19,4 @@ PolyHeader — a minimal local replacement for ModHeader. Multiple request-heade
 ## Notes
 
 - Rules are applied via `declarativeNetRequest` **session rules** (the only kind that supports tab filtering) and re-applied from storage by the service worker, so they survive service-worker restarts.
-- If a rule has a malformed URL filter, the other rules still apply; the bad one is logged in the service-worker console (`chrome://extensions` → "Inspect views: service worker").
+- If Chrome rejects a rule (e.g. a malformed URL filter or an invalid header name), the other rules still apply and the popup shows the reason under the rejected one.

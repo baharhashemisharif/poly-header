@@ -3,6 +3,7 @@ let nextId = 1;
 let paused = false;
 let currentTab = null;
 let saveTimer = null;
+let errors = {};
 
 const $rules = document.getElementById('rules');
 const $pause = document.getElementById('pause');
@@ -25,6 +26,7 @@ async function init() {
   rules = data.rules;
   nextId = data.nextId;
   paused = data.paused;
+  ({ errors = {} } = await chrome.storage.session.get('errors'));
   if (rules.length === 0) {
     rules.push(blankRule());
     save(true);
@@ -50,6 +52,7 @@ function render() {
 function renderRule(rule) {
   const row = document.createElement('div');
   row.className = 'rule' + (rule.enabled ? '' : ' disabled');
+  row.dataset.id = rule.id;
 
   const toggle = document.createElement('input');
   toggle.type = 'checkbox';
@@ -101,7 +104,19 @@ function renderRule(rule) {
   });
 
   row.append(toggle, header, value, urlFilter, tabSel, del);
+  showError(row);
   return row;
+}
+
+function showError(row) {
+  const error = errors[row.dataset.id];
+  row.classList.toggle('rejected', Boolean(error));
+  row.querySelector('.rule-error')?.remove();
+  if (!error) return;
+  const msg = document.createElement('div');
+  msg.className = 'rule-error';
+  msg.textContent = 'Not applied: ' + error;
+  row.append(msg);
 }
 
 function textInput(rule, key, placeholder) {
@@ -123,6 +138,15 @@ document.getElementById('add').addEventListener('click', () => {
   render();
   save(true);
   $rules.lastChild.querySelector('input[type="text"]').focus();
+});
+
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'session' || !changes.errors) return;
+  const next = changes.errors.newValue || {};
+  if (JSON.stringify(next) === JSON.stringify(errors)) return;
+  errors = next;
+  // Update rows in place so a focused input isn't re-created mid-typing.
+  for (const row of $rules.children) showError(row);
 });
 
 $pause.addEventListener('click', () => {

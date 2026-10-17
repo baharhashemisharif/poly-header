@@ -31,6 +31,7 @@ async function rebuild() {
 
   const active = paused ? [] : rules.filter((r) => r.enabled && r.header && r.header.trim());
   const addRules = active.map(toDnrRule);
+  const errors = {};
 
   try {
     await chrome.declarativeNetRequest.updateSessionRules({
@@ -49,9 +50,12 @@ async function rebuild() {
         await chrome.declarativeNetRequest.updateSessionRules({ addRules: [dnr] });
       } catch (err) {
         console.error(`Rule ${dnr.id} rejected:`, err.message);
+        errors[dnr.id] = err.message;
       }
     }
   }
+  // Session storage so the popup can flag rejected rules.
+  await chrome.storage.session.set({ errors });
 
   const applied = (await chrome.declarativeNetRequest.getSessionRules()).length;
   if (paused) {
