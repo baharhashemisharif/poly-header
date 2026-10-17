@@ -4,7 +4,10 @@ const ALL_RESOURCE_TYPES = [
   'webtransport', 'webbundle', 'other',
 ];
 
-function toDnrRule(rule) {
+// Later rules get higher priority, so when two rules touch the same header
+// the one lower in the list wins (DNR applies the highest priority first and
+// lower ones can't override a header it already set).
+function toDnrRule(rule, index) {
   const header = rule.header.trim();
   const condition = { resourceTypes: ALL_RESOURCE_TYPES };
   if (rule.urlFilter && rule.urlFilter.trim()) condition.urlFilter = rule.urlFilter.trim();
@@ -12,7 +15,7 @@ function toDnrRule(rule) {
 
   return {
     id: rule.id,
-    priority: 1,
+    priority: index + 1,
     condition,
     action: {
       type: 'modifyHeaders',
