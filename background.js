@@ -63,8 +63,18 @@ async function rebuild() {
   }
 }
 
+// rebuild() reads storage and the current session rules, then replaces them.
+// Two overlapping runs can both read the same session rules and race on the
+// replace, so queue them: each run starts after the previous one and reads
+// the latest storage, so the last one always applies the current state.
+let queue = Promise.resolve();
+function scheduleRebuild() {
+  queue = queue.then(rebuild).catch((e) => console.error('Rebuild failed:', e));
+  return queue;
+}
+
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && (changes.rules || changes.paused)) rebuild();
+  if (area === 'local' && (changes.rules || changes.paused)) scheduleRebuild();
 });
 
 // Tab ids are meaningless after a restart — disable tab-scoped rules rather
@@ -81,10 +91,10 @@ chrome.runtime.onStartup.addListener(async () => {
     }
   }
   if (changed) await chrome.storage.local.set({ rules });
-  else rebuild();
+  else scheduleRebuild();
 });
 
-chrome.runtime.onInstalled.addListener(rebuild);
+chrome.runtime.onInstalled.addListener(scheduleRebuild);
 
 // When a pinned tab closes, disable its rules instead of widening them to all tabs.
 chrome.tabs.onRemoved.addListener(async (tabId) => {
