@@ -53,13 +53,28 @@ async function rebuild() {
     }
   }
 
-  const applied = (await chrome.declarativeNetRequest.getSessionRules()).length;
+  await updateBadge(paused);
+}
+
+// The global badge counts rules that apply to every tab; a tab with rules
+// pinned to it gets its own count on top, so the badge shows what applies
+// to the tab you're looking at.
+async function updateBadge(paused) {
+  const applied = await chrome.declarativeNetRequest.getSessionRules();
+  const tabs = await chrome.tabs.query({});
   if (paused) {
     chrome.action.setBadgeText({ text: 'off' });
     chrome.action.setBadgeBackgroundColor({ color: '#6b7280' });
-  } else {
-    chrome.action.setBadgeText({ text: applied ? String(applied) : '' });
-    chrome.action.setBadgeBackgroundColor({ color: '#2563eb' });
+    for (const tab of tabs) chrome.action.setBadgeText({ tabId: tab.id, text: null });
+    return;
+  }
+  chrome.action.setBadgeBackgroundColor({ color: '#2563eb' });
+  const global = applied.filter((r) => !r.condition.tabIds).length;
+  chrome.action.setBadgeText({ text: global ? String(global) : '' });
+  for (const tab of tabs) {
+    const pinned = applied.filter((r) => r.condition.tabIds?.includes(tab.id)).length;
+    // null falls back to the global text.
+    chrome.action.setBadgeText({ tabId: tab.id, text: pinned ? String(global + pinned) : null });
   }
 }
 
