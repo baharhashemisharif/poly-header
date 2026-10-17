@@ -3,6 +3,7 @@ let nextId = 1;
 let paused = false;
 let currentTab = null;
 let saveTimer = null;
+let dragId = null;
 
 const $rules = document.getElementById('rules');
 const $pause = document.getElementById('pause');
@@ -50,6 +51,50 @@ function render() {
 function renderRule(rule) {
   const row = document.createElement('div');
   row.className = 'rule' + (rule.enabled ? '' : ' disabled');
+
+  const handle = document.createElement('button');
+  handle.className = 'drag';
+  handle.textContent = '⠿';
+  handle.title = 'Drag to reorder (or focus and use ↑/↓)';
+  handle.setAttribute('aria-label', 'Reorder rule');
+  // Only the handle starts a drag, so text in the inputs stays selectable.
+  handle.addEventListener('mousedown', () => { row.draggable = true; });
+  handle.addEventListener('keydown', (e) => {
+    const step = { ArrowUp: -1, ArrowDown: 1 }[e.key];
+    if (!step) return;
+    e.preventDefault();
+    const from = rules.indexOf(rule);
+    const to = from + step;
+    if (to < 0 || to >= rules.length) return;
+    moveRule(from, to);
+    $rules.children[to].querySelector('.drag').focus();
+  });
+
+  row.addEventListener('dragstart', (e) => {
+    dragId = rule.id;
+    row.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+  });
+  row.addEventListener('dragend', () => {
+    dragId = null;
+    row.draggable = false;
+    row.classList.remove('dragging');
+    clearDropMarkers();
+  });
+  row.addEventListener('dragover', (e) => {
+    if (dragId === null || dragId === rule.id) return;
+    e.preventDefault();
+    clearDropMarkers();
+    row.classList.add(dropsAfter(row, e) ? 'drop-after' : 'drop-before');
+  });
+  row.addEventListener('drop', (e) => {
+    if (dragId === null || dragId === rule.id) return;
+    e.preventDefault();
+    const from = rules.findIndex((r) => r.id === dragId);
+    let to = rules.indexOf(rule) + (dropsAfter(row, e) ? 1 : 0);
+    if (from < to) to--;
+    moveRule(from, to);
+  });
 
   const toggle = document.createElement('input');
   toggle.type = 'checkbox';
@@ -100,8 +145,25 @@ function renderRule(rule) {
     save(true);
   });
 
-  row.append(toggle, header, value, urlFilter, tabSel, del);
+  row.append(handle, toggle, header, value, urlFilter, tabSel, del);
   return row;
+}
+
+function dropsAfter(row, e) {
+  const box = row.getBoundingClientRect();
+  return e.clientY > box.top + box.height / 2;
+}
+
+function clearDropMarkers() {
+  for (const row of $rules.children) row.classList.remove('drop-before', 'drop-after');
+}
+
+function moveRule(from, to) {
+  if (from === to) return;
+  const [moved] = rules.splice(from, 1);
+  rules.splice(to, 0, moved);
+  render();
+  save(true);
 }
 
 function textInput(rule, key, placeholder) {
@@ -123,6 +185,11 @@ document.getElementById('add').addEventListener('click', () => {
   render();
   save(true);
   $rules.lastChild.querySelector('input[type="text"]').focus();
+});
+
+// A press on the handle that never became a drag would leave the row draggable.
+document.addEventListener('mouseup', () => {
+  if (dragId === null) for (const row of $rules.children) row.draggable = false;
 });
 
 $pause.addEventListener('click', () => {
