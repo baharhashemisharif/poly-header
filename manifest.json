@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "PolyHeader",
   "version": "1.0.0",
-  "description": "Local request-header modifier: multiple rules with URL and tab filters. No network, no tracking.",
+  "description": "Local request/response header modifier: multiple rules with URL and tab filters. No network, no tracking.",
   "permissions": ["declarativeNetRequest", "storage", "tabs"],
   "host_permissions": ["<all_urls>"],
   "background": {

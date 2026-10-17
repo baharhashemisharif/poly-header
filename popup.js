@@ -11,6 +11,7 @@ function blankRule() {
   return {
     id: nextId++,
     enabled: true,
+    target: 'request',
     header: '',
     value: '',
     urlFilter: '',
@@ -61,6 +62,15 @@ function renderRule(rule) {
     save(true);
   });
 
+  const target = document.createElement('select');
+  target.title = 'Modify the request or the response';
+  target.append(new Option('Request', 'request'), new Option('Response', 'response'));
+  target.value = rule.target || 'request';
+  target.addEventListener('change', () => {
+    rule.target = target.value;
+    save(true);
+  });
+
   const header = textInput(rule, 'header', 'Header name');
   const value = textInput(rule, 'value', 'Value (empty = remove)');
   const urlFilter = textInput(rule, 'urlFilter', 'URL filter (all if empty)');
@@ -100,7 +110,7 @@ function renderRule(rule) {
     save(true);
   });
 
-  row.append(toggle, header, value, urlFilter, tabSel, del);
+  row.append(toggle, target, header, value, urlFilter, tabSel, del);
   return row;
 }
 

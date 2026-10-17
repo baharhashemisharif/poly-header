@@ -10,18 +10,16 @@ function toDnrRule(rule) {
   if (rule.urlFilter && rule.urlFilter.trim()) condition.urlFilter = rule.urlFilter.trim();
   if (rule.tabId) condition.tabIds = [rule.tabId];
 
+  const modification = rule.value
+    ? { header, operation: 'set', value: rule.value }
+    : { header, operation: 'remove' };
+  const headersKey = rule.target === 'response' ? 'responseHeaders' : 'requestHeaders';
+
   return {
     id: rule.id,
     priority: 1,
     condition,
-    action: {
-      type: 'modifyHeaders',
-      requestHeaders: [
-        rule.value
-          ? { header, operation: 'set', value: rule.value }
-          : { header, operation: 'remove' },
-      ],
-    },
+    action: { type: 'modifyHeaders', [headersKey]: [modification] },
   };
 }
 
