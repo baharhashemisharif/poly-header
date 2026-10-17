@@ -57,7 +57,7 @@ h1 {
 }
 #add:hover { filter: brightness(1.1); }
 
-#pause {
+#pause, #export, #import, #import-cancel {
   border: 1px solid var(--border);
   background: var(--input-bg);
   color: var(--fg);
@@ -66,7 +66,7 @@ h1 {
   font-size: 13px;
   cursor: pointer;
 }
-#pause:hover { border-color: var(--muted); }
+#pause:hover, #export:hover, #import:hover, #import-cancel:hover { border-color: var(--muted); }
 #pause.paused {
   border-color: var(--accent);
   color: var(--accent);
@@ -130,6 +130,40 @@ body.all-paused #rules { opacity: 0.45; }
   border-radius: 4px;
 }
 .rule .del:hover { color: var(--danger); }
+
+#import-panel {
+  margin-bottom: 8px;
+}
+#import-text {
+  width: 100%;
+  padding: 6px 7px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--input-bg);
+  color: var(--fg);
+  font: 12px/1.4 ui-monospace, monospace;
+  resize: vertical;
+}
+.import-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-top: 6px;
+}
+#import-error {
+  flex: 1;
+  color: var(--danger);
+  font-size: 11px;
+}
+#import-apply {
+  border: 1px solid var(--accent);
+  background: var(--accent);
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  cursor: pointer;
+}
 
 #empty {
   color: var(--muted);

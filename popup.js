@@ -125,6 +125,79 @@ document.getElementById('add').addEventListener('click', () => {
   $rules.lastChild.querySelector('input[type="text"]').focus();
 });
 
+document.getElementById('export').addEventListener('click', () => {
+  // Tab ids mean nothing outside this browser session, so drop them — and
+  // export tab-pinned rules disabled, so importing never widens one to all tabs.
+  const exported = rules
+    .filter((r) => r.header && r.header.trim())
+    .map(({ id, tabId, tabTitle, ...rest }) => (tabId ? { ...rest, enabled: false } : rest));
+  const blob = new Blob([JSON.stringify({ rules: exported }, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `polyheader-rules-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+// A file picker would close the popup (it loses focus), so import by paste.
+const $importPanel = document.getElementById('import-panel');
+const $importText = document.getElementById('import-text');
+const $importError = document.getElementById('import-error');
+
+document.getElementById('import').addEventListener('click', () => {
+  $importPanel.hidden = !$importPanel.hidden;
+  $importError.textContent = '';
+  if (!$importPanel.hidden) $importText.focus();
+});
+
+document.getElementById('import-cancel').addEventListener('click', () => {
+  $importPanel.hidden = true;
+  $importText.value = '';
+});
+
+document.getElementById('import-apply').addEventListener('click', () => {
+  let imported;
+  try {
+    imported = parseImport($importText.value);
+  } catch (e) {
+    $importError.textContent = e.message;
+    return;
+  }
+  // Replace the lone empty placeholder row rather than keeping it above the imports.
+  if (rules.length === 1 && !rules[0].header.trim()) rules = [];
+  for (const rule of imported) rules.push({ ...rule, id: nextId++ });
+  $importPanel.hidden = true;
+  $importText.value = '';
+  render();
+  save(true);
+});
+
+function parseImport(text) {
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    throw new Error('Not valid JSON.');
+  }
+  const list = Array.isArray(data) ? data : data?.rules;
+  if (!Array.isArray(list)) throw new Error('Expected an array of rules or { "rules": [...] }.');
+  const imported = list.map((item, i) => {
+    if (!item || typeof item.header !== 'string' || !item.header.trim()) {
+      throw new Error(`Rule ${i + 1} has no header name.`);
+    }
+    return {
+      ...item,
+      enabled: item.enabled !== false,
+      value: typeof item.value === 'string' ? item.value : '',
+      urlFilter: typeof item.urlFilter === 'string' ? item.urlFilter : '',
+      tabId: null,
+      tabTitle: null,
+    };
+  });
+  if (!imported.length) throw new Error('No rules to import.');
+  return imported;
+}
+
 $pause.addEventListener('click', () => {
   paused = !paused;
   render();

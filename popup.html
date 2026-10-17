@@ -8,10 +8,22 @@
   <header>
     <h1>PolyHeader</h1>
     <div class="actions">
+      <button id="export" title="Download rules as JSON">Export</button>
+      <button id="import" title="Add rules from JSON">Import</button>
       <button id="pause" title="Pause/resume all rules"></button>
       <button id="add" title="Add rule">+ Add</button>
     </div>
   </header>
+
+  <section id="import-panel" hidden>
+    <textarea id="import-text" rows="6" spellcheck="false" aria-label="Rules JSON"
+      placeholder="Paste exported rules JSON"></textarea>
+    <div class="import-row">
+      <span id="import-error" role="alert"></span>
+      <button id="import-cancel">Cancel</button>
+      <button id="import-apply">Add rules</button>
+    </div>
+  </section>
 
   <div id="rules"></div>
 
