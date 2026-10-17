@@ -10,8 +10,8 @@ PolyHeader — a minimal local replacement for ModHeader. Multiple request-heade
 
 ## Usage
 
-- **+ Add** creates a rule: header name, value, URL filter, tab filter.
-- Empty **value** = remove the header from requests instead of setting it.
+- **+ Add** creates a rule: header name, operation, value, URL filter, tab filter.
+- **Set** sends the header with the given value (an empty value sends an empty header); **Remove** strips it from requests.
 - **URL filter** is a [DNR urlFilter](https://developer.chrome.com/docs/extensions/reference/api/declarativeNetRequest#url_filter_syntax): plain substring (`api.example.com`), `*` wildcards, or `||example.com` to anchor to a domain. Empty = all URLs.
 - **Tab filter**: "All tabs" or "This tab" (the tab active when you opened the popup). When a pinned tab closes — or the browser restarts — its rules are disabled automatically so headers never leak to other tabs.
 - The badge on the icon shows how many rules are currently applied.

@@ -12,6 +12,7 @@ function blankRule() {
     id: nextId++,
     enabled: true,
     header: '',
+    operation: 'set',
     value: '',
     urlFilter: '',
     tabId: null,
@@ -23,6 +24,8 @@ async function init() {
   [currentTab] = await chrome.tabs.query({ active: true, currentWindow: true });
   const data = await chrome.storage.local.get({ rules: [], nextId: 1, paused: false });
   rules = data.rules;
+  // Rules saved before the operation field existed used an empty value to mean remove.
+  for (const rule of rules) rule.operation ||= rule.value ? 'set' : 'remove';
   nextId = data.nextId;
   paused = data.paused;
   if (rules.length === 0) {
@@ -62,7 +65,18 @@ function renderRule(rule) {
   });
 
   const header = textInput(rule, 'header', 'Header name');
-  const value = textInput(rule, 'value', 'Value (empty = remove)');
+  const op = document.createElement('select');
+  op.title = 'Set or remove the header';
+  op.append(new Option('Set', 'set'), new Option('Remove', 'remove'));
+  op.value = rule.operation;
+
+  const value = textInput(rule, 'value', 'Value');
+  value.disabled = rule.operation === 'remove';
+  op.addEventListener('change', () => {
+    rule.operation = op.value;
+    value.disabled = rule.operation === 'remove';
+    save(true);
+  });
   const urlFilter = textInput(rule, 'urlFilter', 'URL filter (all if empty)');
 
   const tabSel = document.createElement('select');
@@ -100,7 +114,7 @@ function renderRule(rule) {
     save(true);
   });
 
-  row.append(toggle, header, value, urlFilter, tabSel, del);
+  row.append(toggle, header, op, value, urlFilter, tabSel, del);
   return row;
 }
 

@@ -4,6 +4,11 @@ const ALL_RESOURCE_TYPES = [
   'webtransport', 'webbundle', 'other',
 ];
 
+// Rules saved before the operation field existed used an empty value to mean remove.
+function operationOf(rule) {
+  return rule.operation || (rule.value ? 'set' : 'remove');
+}
+
 function toDnrRule(rule) {
   const header = rule.header.trim();
   const condition = { resourceTypes: ALL_RESOURCE_TYPES };
@@ -17,8 +22,8 @@ function toDnrRule(rule) {
     action: {
       type: 'modifyHeaders',
       requestHeaders: [
-        rule.value
-          ? { header, operation: 'set', value: rule.value }
+        operationOf(rule) === 'set'
+          ? { header, operation: 'set', value: rule.value || '' }
           : { header, operation: 'remove' },
       ],
     },
