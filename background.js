@@ -1,8 +1,7 @@
-const ALL_RESOURCE_TYPES = [
-  'main_frame', 'sub_frame', 'stylesheet', 'script', 'image', 'font',
-  'object', 'xmlhttprequest', 'ping', 'csp_report', 'media', 'websocket',
-  'webtransport', 'webbundle', 'other',
-];
+// Ask the browser which resource types it supports instead of hardcoding
+// them: an older Chrome rejects every rule naming a type it doesn't know
+// (e.g. 'webtransport'), and a newer one may add types we'd otherwise miss.
+const ALL_RESOURCE_TYPES = Object.values(chrome.declarativeNetRequest.ResourceType);
 
 function toDnrRule(rule) {
   const header = rule.header.trim();
