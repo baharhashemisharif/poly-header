@@ -3,6 +3,7 @@ let nextId = 1;
 let paused = false;
 let currentTab = null;
 let saveTimer = null;
+let lastWritten = null;
 
 const $rules = document.getElementById('rules');
 const $pause = document.getElementById('pause');
@@ -34,7 +35,10 @@ async function init() {
 
 function save(immediate = false) {
   clearTimeout(saveTimer);
-  const write = () => chrome.storage.local.set({ rules, nextId, paused });
+  const write = () => {
+    lastWritten = JSON.stringify(rules);
+    chrome.storage.local.set({ rules, nextId, paused });
+  };
   if (immediate) write();
   else saveTimer = setTimeout(write, 250);
 }
@@ -124,6 +128,41 @@ document.getElementById('add').addEventListener('click', () => {
   save(true);
   $rules.lastChild.querySelector('input[type="text"]').focus();
 });
+
+// The service worker disables rules whose tab closed. Pick that up, or the
+// popup's next save would write its stale copy back and re-enable them.
+// Only the fields the worker touches are merged, so in-progress typing survives.
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== 'local' || !changes.rules) return;
+  const incoming = changes.rules.newValue || [];
+  if (JSON.stringify(incoming) === lastWritten) return;
+  let changed = false;
+  for (const rule of rules) {
+    const ext = incoming.find((r) => r.id === rule.id);
+    if (!ext) continue;
+    for (const key of ['enabled', 'tabId', 'tabTitle']) {
+      if (rule[key] !== ext[key]) {
+        rule[key] = ext[key];
+        changed = true;
+      }
+    }
+  }
+  if (changed) renderKeepingFocus();
+});
+
+function renderKeepingFocus() {
+  const active = document.activeElement;
+  const rows = [...$rules.children];
+  const rowIndex = rows.findIndex((row) => row.contains(active));
+  const fieldIndex = rowIndex >= 0 ? [...rows[rowIndex].querySelectorAll('input, select')].indexOf(active) : -1;
+  const caret = active && 'selectionStart' in active ? active.selectionStart : null;
+  render();
+  if (fieldIndex < 0) return;
+  const field = $rules.children[rowIndex]?.querySelectorAll('input, select')[fieldIndex];
+  if (!field) return;
+  field.focus();
+  if (caret !== null && field.type === 'text') field.setSelectionRange(caret, caret);
+}
 
 $pause.addEventListener('click', () => {
   paused = !paused;
